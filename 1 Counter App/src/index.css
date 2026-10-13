@@ -1,0 +1,14 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI',sans-serif;
+}
+
+body {
+  background: linear-gradient(to right, #74ebd5, #90929d); /* Changed from background-color */
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

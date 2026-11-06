@@ -1,97 +1,102 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-// Free fake API (no key needed)
+// JSONPlaceholder API - we use the /todos resource
 const API_URL = "https://jsonplaceholder.typicode.com/todos";
+
+// Small helper: call the API and return the JSON result
+async function callApi(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    throw new Error("Server error " + res.status);
+  }
+  return res.json();
+}
 
 function App() {
   const [todos, setTodos] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
 
-  // 1. On first load: read from localStorage, else get from API
+  // On page load: GET tasks from the API                                                        [Data getted from API]
   useEffect(() => {
-    const saved = localStorage.getItem("todos");
-    if (saved) {
-      setTodos(JSON.parse(saved));
-      setLoading(false);
-    } else {
-      fetchTodos();
-    }
+    loadFromApi();
   }, []);
 
-  // 2. Save to localStorage whenever todos change
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem("todos", JSON.stringify(todos));
-    }
-  }, [todos, loading]);
+  const showSuccess = (msg) => {
+    setMessage(msg);
+    setError("");
+  };
 
-  // READ - get first 5 todos from API
-  const fetchTodos = async () => {
+  const showError = (msg) => {
+    setError(msg);
+    setMessage("");
+  };
+
+  // GET (list) - GET /todos?_limit=10
+  const loadFromApi = async () => {
+    setLoading(true);
     try {
-      const res = await fetch(API_URL + "?_limit=5");
-      const data = await res.json();
-      const list = data.map((item) => ({
-        id: item.id,
-        title: item.title,
-        completed: item.completed,
-        fromApi: true,
-      }));
-      setTodos(list);
+      const data = await callApi(API_URL + "?_limit=5");
+      setTodos(data);
+      // showSuccess("Loaded " + data.length + " tasks from API (GET)");
     } catch (err) {
-      setMessage("Could not load todos from API");
+      showError("Could not load tasks: " + err.message);
     }
     setLoading(false);
   };
 
-  // CREATE
+  // CREATE - POST /todos                                                                          [data added]
   const addTodo = async () => {
     if (text.trim() === "") {
-      setMessage("Please type a task first");
+      showError("Please type a task first");
       return;
     }
     const newTodo = {
-      id: Date.now(),
       title: text.trim(),
       completed: false,
-      fromApi: false,
+      userId: 1,
     };
     try {
-      await fetch(API_URL, {
+      const data = await callApi(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json; charset=UTF-8" },
         body: JSON.stringify(newTodo),
       });
+      // The API always replies with id 201, so we make our own unique id
+      setTodos([{ ...data, id: Date.now() }, ...todos]);
+      setText("");
+      showSuccess("Task added");
     } catch (err) {
-      setMessage("API not reachable, saved locally");
+      showError("Could not add task: " + err.message);
     }
-    setTodos([newTodo, ...todos]);
-    setText("");
-    setMessage("");
   };
 
-  // UPDATE - toggle done / not done
+  // UPDATE (PATCH) - tick / untick a task: PATCH /todos/:id                                     [data updated tick/untick]
   const toggleTodo = async (todo) => {
-    const updated = { ...todo, completed: !todo.completed };
-    if (todo.fromApi) {
-      try {
-        await fetch(API_URL + "/" + todo.id, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
-        });
-      } catch (err) {
-        setMessage("API not reachable, saved locally");
-      }
+    const newValue = !todo.completed;
+    let note = "Task updated ";
+    try {
+      await callApi(API_URL + "/" + todo.id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json; charset=UTF-8" },
+        body: JSON.stringify({ completed: newValue }),
+      });
+    } catch (err) {
+      // The demo API does not know tasks we created, so it replies with an error
+      note = "Changed on screen only (demo API does not store tasks you add)";
     }
-    setTodos(todos.map((t) => (t.id === todo.id ? updated : t)));
+    setTodos(
+      todos.map((t) => (t.id === todo.id ? { ...t, completed: newValue } : t))
+    );
+    showSuccess(note);
   };
 
-  // UPDATE - edit title
+  // UPDATE (PUT) - change the title: PUT /todos/:id                                                [data edited title]
   const startEdit = (todo) => {
     setEditId(todo.id);
     setEditText(todo.title);
@@ -99,34 +104,32 @@ function App() {
 
   const saveEdit = async (todo) => {
     if (editText.trim() === "") {
-      setMessage("Task cannot be empty");
+      showError("Task cannot be empty");
       return;
     }
     const updated = { ...todo, title: editText.trim() };
-    if (todo.fromApi) {
-      try {
-        await fetch(API_URL + "/" + todo.id, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
-        });
-      } catch (err) {
-        setMessage("API not reachable, saved locally");
-      }
+    let note = "Task edited ";
+    try {
+      await callApi(API_URL + "/" + todo.id, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json; charset=UTF-8" },
+        body: JSON.stringify(updated),
+      });
+    } catch (err) {
+      note = "Changed on screen only (demo API does not store tasks you add)";
     }
     setTodos(todos.map((t) => (t.id === todo.id ? updated : t)));
     setEditId(null);
-    setMessage("");
+    showSuccess(note);
   };
 
-  // DELETE
+  // DELETE - DELETE /todos/:id                                                                         [data deleted]
   const deleteTodo = async (todo) => {
-    if (todo.fromApi) {
-      try {
-        await fetch(API_URL + "/" + todo.id, { method: "DELETE" });
-      } catch (err) {
-        setMessage("API not reachable, deleted locally");
-      }
+    try {
+      await callApi(API_URL + "/" + todo.id, { method: "DELETE" });
+      showSuccess("Task deleted ");
+    } catch (err) {
+      showSuccess("Task removed on screen (demo API does not store tasks you add)");
     }
     setTodos(todos.filter((t) => t.id !== todo.id));
   };
@@ -155,6 +158,7 @@ function App() {
         </div>
 
         {message && <p className="message">{message}</p>}
+        {error && <p className="error">{error}</p>}
         {loading && <p className="info">Loading...</p>}
         {!loading && todos.length === 0 && (
           <p className="info">No tasks yet. Add one above.</p>
@@ -198,6 +202,10 @@ function App() {
             </li>
           ))}
         </ul>
+
+        <button className="reload-btn" onClick={loadFromApi}>
+          Reload tasks from API
+        </button>
       </div>
     </div>
   );

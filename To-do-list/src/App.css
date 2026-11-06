@@ -85,7 +85,6 @@ button {
 }
 
 .message {
-  color: #c0392b;
   font-size: 14px;
   margin: 10px 0 0;
 }
@@ -134,4 +133,22 @@ li input[type="checkbox"] {
   .title {
     flex-basis: calc(100% - 40px);
   }
+}
+
+.message {
+  color: #2e9d5b;
+}
+
+.error {
+  color: #c0392b;
+  font-size: 14px;
+  margin: 10px 0 0;
+}
+
+.reload-btn {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 10px;
+  background: #1f3a5f;
 }

@@ -13,10 +13,12 @@ import {
   discountPercent,
   thumbStyle,
 } from "../services/storeService";
+import { useCart } from "../contexts/CartContext";
 
 const ProductDetails = () => {
   const { id } = useParams(); // from the route: /products/:id
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [qty, setQty] = useState(1);
 
   const product = getProductById(id);
@@ -39,16 +41,15 @@ const ProductDetails = () => {
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
 
-  const handleAdd = () => {
-    // Cart will be connected in Step 7. For now we only show a message.
-    toast.success(`${qty} × ${product.name} added to cart`);
-  };
+const handleAdd = () => {
+  addToCart(product.id, qty);
+  toast.success(`${qty} × ${product.name} added to cart`);
+};
 
-  const handleBuyNow = () => {
-    handleAdd();
-    navigate("/checkout"); // this page is built in Step 9
-  };
-
+const handleBuyNow = () => {
+  addToCart(product.id, qty);
+  navigate("/checkout"); // this page is built in Step 9
+};
   return (
     <Container className="py-4">
       {/* Breadcrumb */}

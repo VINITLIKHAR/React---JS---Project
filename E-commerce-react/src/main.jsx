@@ -4,10 +4,13 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { CartProvider } from "./contexts/CartContext";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
-    <App />
-    <Toaster position="top-center" />
+    <CartProvider>
+      <App />
+      <Toaster position="top-center" />
+    </CartProvider>
   </BrowserRouter>,
 );

@@ -3,12 +3,14 @@ import { Card, Badge, Button } from "react-bootstrap";
 import { FaStar } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { formatPrice, discountPercent, thumbStyle } from "../services/storeService";
+import { useCart } from "../contexts/CartContext";
 
 const ProductCard = ({ product }) => {
-  const handleAdd = () => {
-    // Cart will be connected in Step 7. For now we only show a message.
-    toast.success(`${product.name} added to cart`);
-  };
+  const { addToCart } = useCart();
+const handleAdd = () => {
+  addToCart(product.id);
+  toast.success(`${product.name} added to cart`);
+};
 
   return (
     <Card className="product-card">

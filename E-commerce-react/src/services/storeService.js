@@ -35,3 +35,29 @@ export const discountPercent = (item) => Math.round(((item.oldPrice - item.price
 export const thumbStyle = (item) => ({ background: `linear-gradient(135deg, ${item.bg[0]}, ${item.bg[1]})` });
 export const getProductById = (id) => products.find((x) => x.id === Number(id));
 export const getCategory = (slug) => categories.find((c) => c.slug === slug);
+
+// ---- Orders (saved in localStorage for now) ----
+const ORDERS_KEY = "shopzy_orders";
+
+const readOrders = () => {
+  try {
+    return JSON.parse(localStorage.getItem(ORDERS_KEY)) || [];
+  } catch {
+    return [];
+  }
+};
+
+// All orders of one user
+export const getOrders = (email) => readOrders().filter((o) => o.email === email);
+
+// Save a new order (newest first)
+export const saveOrder = (order) => {
+  const newOrder = {
+    ...order,
+    id: "ORD" + Date.now().toString().slice(-8),
+    date: new Date().toISOString(),
+    status: "Processing",
+  };
+  localStorage.setItem(ORDERS_KEY, JSON.stringify([newOrder, ...readOrders()]));
+  return newOrder;
+};

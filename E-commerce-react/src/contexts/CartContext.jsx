@@ -13,6 +13,8 @@ const loadCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
+  console.log("hello");
+  
   const [items, setItems] = useState(loadCart); // [{ id, qty }]
 
   // Save the cart in the browser, so it stays after refresh

@@ -7,7 +7,7 @@ import { formatPrice, thumbStyle } from "../services/storeService";
 
 const Cart = () => {
   const { cartItems, subtotal, shipping, total, updateQty, removeFromCart } = useCart();
-
+  
   // Empty cart
   if (cartItems.length === 0) {
     return (

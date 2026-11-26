@@ -1,6 +1,7 @@
-import { Link, NavLink } from "react-router-dom";
-import { Navbar, Nav, Container, Badge } from "react-bootstrap";
-import { FiShoppingCart } from "react-icons/fi";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Navbar, Nav, Container, Badge, NavDropdown } from "react-bootstrap";
+import { FiShoppingCart, FiUser } from "react-icons/fi";
+import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 
 // Small cart icon with a red count badge
@@ -17,6 +18,9 @@ const CartLink = ({ className = "" }) => {
 };
 
 const Header = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <Navbar expand="lg" sticky="top" className="shop-navbar py-2" collapseOnSelect>
       <Container>
@@ -39,10 +43,30 @@ const Header = () => {
 
           <Nav className="align-items-lg-center">
             <CartLink className="d-none d-lg-block" />
-            <div className="d-flex gap-2 mt-2 mt-lg-0 ms-lg-2">
-              <Link to="/login" className="btn btn-outline-primary btn-sm px-3">Login</Link>
-              <Link to="/register" className="btn btn-primary btn-sm px-3">Sign up</Link>
-            </div>
+
+            {user ? (
+              <NavDropdown
+                align="end"
+                title={<span><FiUser className="me-1" />{user.name.split(" ")[0]}</span>}
+              >
+                <NavDropdown.Item as={Link} to="/profile">My Profile</NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/orders">My Orders</NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item
+                  onClick={() => {
+                    logout();
+                    navigate("/");
+                  }}
+                >
+                  Logout
+                </NavDropdown.Item>
+              </NavDropdown>
+            ) : (
+              <div className="d-flex gap-2 mt-2 mt-lg-0 ms-lg-2">
+                <Link to="/login" className="btn btn-outline-primary btn-sm px-3">Login</Link>
+                <Link to="/register" className="btn btn-primary btn-sm px-3">Sign up</Link>
+              </div>
+            )}
           </Nav>
         </Navbar.Collapse>
       </Container>

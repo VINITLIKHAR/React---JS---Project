@@ -13,7 +13,6 @@ const loadCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-  console.log("hello");
   
   const [items, setItems] = useState(loadCart); // [{ id, qty }]
 
